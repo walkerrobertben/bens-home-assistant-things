@@ -6,7 +6,7 @@
 bookings = []
 ####
 
-logger.info('Storing', len(bookings), 'bookings...')
+logger.debug('Storing', len(bookings), 'bookings...')
 
 hass.services.call('python_script', 'hass_entities', {
     'action': 'set_attributes',
@@ -16,5 +16,5 @@ hass.services.call('python_script', 'hass_entities', {
     }
 })
 
-logger.info('Bookings attribute updated')
+logger.debug('Bookings attribute updated')
 output["bookings"] = "Stored " + str(len(bookings)) + " bookings"
