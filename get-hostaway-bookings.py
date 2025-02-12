@@ -1,9 +1,7 @@
-import os, http.client, urllib.parse, json, datetime
+import http.client, urllib.parse, json, datetime
+IS_HASS = "hass" in globals()
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-env_file = os.path.join(script_dir, '.env')
-
-log = logger.info if "logger" in globals() else print
+env_file = '/config/python_scripts/.env' if IS_HASS else './.env'
 
 def load_env():
     env = {}
@@ -22,6 +20,8 @@ HOSTAWAY_API_KEY = env.get('HOSTAWAY_API_KEY')
 
 if HOSTAWAY_ACCOUNT is None or HOSTAWAY_API_KEY is None:
     raise Exception('HOSTAWAY_ACCOUNT and HOSTAWAY_API_KEY are required')
+
+log = logger.info if IS_HASS else print
 
 def get_current_dt():
     if "hass" in globals():
