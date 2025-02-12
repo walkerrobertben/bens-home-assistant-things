@@ -8,13 +8,18 @@ bookings = []
 
 logger.debug('Storing', len(bookings), 'bookings...')
 
-hass.services.call('python_script', 'hass_entities', {
-    'action': 'set_attributes',
-    'entity_id': 'input_button.bookings_data',
-    'attributes': {
-        'bookings': bookings
-    }
-})
+# Get the current state and attributes
+entity_id = "input_button.bookings_data"
+entity = hass.states.get(entity_id)
+state = entity.state
+attributes = dict(entity.attributes)
 
+# Update the bookings attribute
+attributes["bookings"] = bookings
+
+# Set the new state with updated attributes
+hass.states.set(entity_id, state, attributes)
+
+# Log the update
 logger.debug('Bookings attribute updated')
 output["bookings"] = "Stored " + str(len(bookings)) + " bookings"
