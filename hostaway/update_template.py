@@ -8,17 +8,20 @@ bookings = []
 
 logger.debug('Storing', len(bookings), 'bookings...')
 
-# Get the current state and attributes
+# get the entity
 entity_id = "input_button.bookings_data"
 entity = hass.states.get(entity_id)
-state = entity.state
-attributes = dict(entity.attributes)
+
+# dict() is undefined, so build new dict manually
+attributes = {}
+for attr in entity.attributes:
+    attributes[attr] = entity.attributes.get(attr)
 
 # Update the bookings attribute
 attributes["bookings"] = bookings
 
 # Set the new state with updated attributes
-hass.states.set(entity_id, state, attributes)
+hass.states.set(entity_id, entity.state, attributes)
 
 # Log the update
 logger.debug('Bookings attribute updated')
