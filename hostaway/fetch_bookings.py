@@ -1,21 +1,17 @@
 import os, http.client, urllib.parse, json, datetime
 
-HASS = True
-try:
-    if hass: pass
-except NameError:
-    HASS = False
-
+# directories
 script_dir = os.path.dirname(os.path.abspath(__file__))
-target_dir = '/config/python_scripts' if HASS else './'
+target_dir = '/config/python_scripts'
 
-env_file = os.path.join(script_dir, '.env')
-script_template = os.path.join(script_dir, 'update_template.py')
-script_target = os.path.join(target_dir, 'set_hostaway_bookings.py')
+# file names
+script_template = 'update_template.py'
+script_target = 'set_hostaway_bookings.py'
 
+# environment
 def load_env():
     env = {}
-    with open(env_file, 'r') as content:
+    with open(os.path.join(script_dir, '.env'), 'r') as content:
         for line in content:
             if line.startswith('#'):
                 continue
@@ -25,18 +21,19 @@ def load_env():
 
 env = load_env()
 
+IS_PROD = env.get('ENV') == 'prod'
 HOSTAWAY_ACCOUNT = env.get('HOSTAWAY_ACCOUNT')
 HOSTAWAY_API_KEY = env.get('HOSTAWAY_API_KEY')
 
 if HOSTAWAY_ACCOUNT is None or HOSTAWAY_API_KEY is None:
     raise Exception('HOSTAWAY_ACCOUNT and HOSTAWAY_API_KEY are required')
 
-def get_current_dt():
-    if "hass" in globals():
-        return datetime.datetime.strptime(hass.states.get('sensor.worldclock_london').state, "%Y-%m-%d %H:%M")
+# -----------------------------------------------------------------------
+# when running on dev just put the generated script in the same directory
+if not IS_PROD: target_dir = script_dir
+# -----------------------------------------------------------------------
 
-    return datetime.datetime.now()
-
+# hostaway api
 def get_access_token():
     connection = http.client.HTTPSConnection("api.hostaway.com")
 
@@ -105,7 +102,7 @@ def get_reservations_page(
     return response_data.get('result')
 
 def get_reservations(bearer_token):
-    check_out_after = get_current_dt() - datetime.timedelta(days=1)
+    check_out_after = datetime.datetime.now() - datetime.timedelta(days=1)
     reservations = []
     offset = 0
 
@@ -154,10 +151,11 @@ def get_booking_object(reservation):
         'check_out_local': checkOut,
     }
 
+# generate the script
 def generate_bookings_script(reservations):
     bookings = [get_booking_object(reservation) for reservation in reservations]
     
-    with open(script_template, 'r') as template:
+    with open(os.path.join(script_dir, script_template), 'r') as template:
 
         template_lines = template.readlines()
 
@@ -168,8 +166,10 @@ def generate_bookings_script(reservations):
                 }\n"""
                 break
 
-        with open(script_target, 'w') as output_script:
+        with open(os.path.join(target_dir, script_target), 'w') as output_script:
             output_script.writelines(template_lines)
+
+# -----------------------------------------------------------------------
 
 print('Getting access token')
 token = get_access_token()
