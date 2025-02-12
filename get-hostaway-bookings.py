@@ -3,6 +3,8 @@ import os, http.client, urllib.parse, json, datetime
 script_dir = os.path.dirname(os.path.abspath(__file__))
 env_file = os.path.join(script_dir, '.env')
 
+log = logger.info if "logger" in globals() else print
+
 def load_env():
     env = {}
     with open(env_file, 'r') as content:
@@ -26,7 +28,6 @@ def get_current_dt():
         return datetime.datetime.strptime(hass.states.get('sensor.worldclock_london').state, "%Y-%m-%d %H:%M")
 
     return datetime.datetime.now()
-    
 
 def get_access_token():
     connection = http.client.HTTPSConnection("api.hostaway.com")
@@ -162,6 +163,11 @@ def update_reservations_attribute(reservations):
     else:
         print(json.dumps(bookings, indent=2))
 
+log('Getting access token')
 token = get_access_token()
+
+log('Getting reservations from hostaway')
 reservations = get_reservations(token)
+
+log('Storing bookings')
 update_reservations_attribute(reservations)
