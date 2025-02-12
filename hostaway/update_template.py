@@ -17,3 +17,4 @@ hass.services.call('python_script', 'hass_entities', {
 })
 
 logger.info('Bookings attribute updated')
+output["bookings"] = "Stored " + str(len(bookings)) + " bookings"
