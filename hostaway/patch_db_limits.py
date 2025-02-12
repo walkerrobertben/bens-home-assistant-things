@@ -1,3 +1,5 @@
+import sys
+
 db_schema = '/usr/src/homeassistant/homeassistant/components/recorder/db_schema.py'
 
 def get_limits():
@@ -31,6 +33,16 @@ def set_limit(key, value):
             else:
                 file.write(line)
 
-set_limit('MAX_STATE_ATTRS_BYTES', 128000)
-set_limit('MAX_EVENT_DATA_BYTES', 128000)
-print(get_limits())
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("Getting limits...")
+        print(get_limits())
+    elif len(sys.argv) == 2:
+        new_value = sys.argv[1]
+        print("Patching limits to " + new_value)
+        set_limit("MAX_STATE_ATTRS_BYTES", new_value)
+        set_limit("MAX_EVENT_DATA_BYTES", new_value)
+        print("Patched!")
+        print(get_limits())
+    else:
+        print("Invalid usage. Run without arguments to view limits, or pass a single numeric value to update.")
