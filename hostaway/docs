@@ -1,0 +1,34 @@
+goal:
+    check_in and check_out events inside home-assistant
+
+automations:
+    fetch-all-bookings:
+        runs daily (or if HA restarts) and uses the hostaway API to get *all* bookings
+
+        first, this runs a shell_command, which triggers an external python script
+        this python script generates a .py file in /config/python_scripts which HA can run as an action
+        this script contains all the booking data, and HA writes this to an attribute on input_button.bookings_data
+
+        once the attribute is updated, it triggers the 'occupancy' automation to update the occupied attribute based on the new data
+        input_boolean.occupancy_events_enabled is set false during this process to prevent the 'occupancy' events being dispatched
+
+    handle reservation webhook:
+        runs whenever a booking is created, updated, or deleted on hostaway
+        parses the body data and updates the 'bookings' attribute on input_button.bookings_data
+
+    handle occupancy events:
+        runs every 5 minutes, and updates the 'occupied' attribute on input_boolean.occupancy
+        it does this by comparing the current time (using sensor.worldclock_london) to the check_in and check_out times
+        when a property is added/removed from the 'occupied' list, it dispatches a guest_checked_in or guest_checked_out event
+
+    remove old bookings:
+        runs every 5 minutes, and removes any booking that 'checked out' 1+ days ago
+
+patch limits:
+    the bookings attribute is larger than HA's default limit
+    patch_db_limits modifies the db_schema.py file in HA's code to increase this
+    this is available as a shell command action in the HA UI
+    a restart is required for changes to take effect after patching
+
+updates:
+    the code is stored in this repo, and can be updated by navigating to the 'hostaway' directory and running 'git pull'
